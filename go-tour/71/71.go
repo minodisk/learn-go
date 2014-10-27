@@ -13,12 +13,19 @@ var storage map[string]bool
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
 func Crawl(url string, depth int, fetcher Fetcher) {
-	ch := make(chan []string)
-	go crawl(url, fetcher, ch)
+	if storage[url] {
+		return
+	}
 
 	storage[url] = true
-	for i := 0; i < depth; i++ {
+	depth--
 
+	ch := make(chan []string)
+	go crawl(url, fetcher, ch)
+	urls := <-ch
+
+	for _, u := range urls {
+		Crawl(u, depth, fetcher)
 	}
 }
 
